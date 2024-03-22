@@ -1,0 +1,159 @@
+import java.sql.*;
+
+public class DatabaseConnection {
+    // JDBC URL, username, and password
+    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/your_database_name";
+    private static final String USERNAME = "your_username";
+    private static final String PASSWORD = "your_password";
+
+    // Establishing database connection
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
+    }
+}
+
+class Employee {
+    private int employeeID;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private Date hireDate;
+    private BigDecimal salary;
+
+    // Getters and setters
+    // Constructor
+}
+
+public class CreateEmployee {
+    public void insertEmployee(Employee employee) {
+        String sql = "INSERT INTO Employee (FirstName, LastName, Email, PhoneNumber, HireDate, Salary) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, employee.getFirstName());
+            pstmt.setString(2, employee.getLastName());
+            pstmt.setString(3, employee.getEmail());
+            pstmt.setString(4, employee.getPhoneNumber());
+            pstmt.setDate(5, employee.getHireDate());
+            pstmt.setBigDecimal(6, employee.getSalary());
+
+            pstmt.executeUpdate();
+            System.out.println("Employee inserted successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        // Example usage
+        Employee employee = new Employee();
+        employee.setFirstName("John");
+        employee.setLastName("Doe");
+        employee.setEmail("john.doe@example.com");
+        employee.setPhoneNumber("1234567890");
+        employee.setHireDate(new Date(System.currentTimeMillis()));
+        employee.setSalary(new BigDecimal("50000.00"));
+
+        CreateEmployee createEmployee = new CreateEmployee();
+        createEmployee.insertEmployee(employee);
+    }
+}
+
+
+import java.sql.*;
+import java.math.BigDecimal;
+
+public class ReadUpdateDeleteEmployee {
+    // Establishing database connection
+    public static Connection getConnection() throws SQLException {
+        String jdbcUrl = "jdbc:mysql://localhost:3306/your_database_name";
+        String username = "your_username";
+        String password = "your_password";
+        return DriverManager.getConnection(jdbcUrl, username, password);
+    }
+
+    // Read operation: Get employee by ID
+    public Employee getEmployeeById(int employeeId) {
+        String sql = "SELECT * FROM Employee WHERE EmployeeID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, employeeId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Employee employee = new Employee();
+                employee.setEmployeeID(rs.getInt("EmployeeID"));
+                employee.setFirstName(rs.getString("FirstName"));
+                employee.setLastName(rs.getString("LastName"));
+                employee.setEmail(rs.getString("Email"));
+                employee.setPhoneNumber(rs.getString("PhoneNumber"));
+                employee.setHireDate(rs.getDate("HireDate"));
+                employee.setSalary(rs.getBigDecimal("Salary"));
+                return employee;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Update operation: Update employee details
+    public void updateEmployee(Employee employee) {
+        String sql = "UPDATE Employee SET FirstName=?, LastName=?, Email=?, PhoneNumber=?, HireDate=?, Salary=? WHERE EmployeeID=?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, employee.getFirstName());
+            pstmt.setString(2, employee.getLastName());
+            pstmt.setString(3, employee.getEmail());
+            pstmt.setString(4, employee.getPhoneNumber());
+            pstmt.setDate(5, employee.getHireDate());
+            pstmt.setBigDecimal(6, employee.getSalary());
+            pstmt.setInt(7, employee.getEmployeeID());
+
+            int rowsUpdated = pstmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Employee updated successfully!");
+            } else {
+                System.out.println("No employee found with ID: " + employee.getEmployeeID());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Delete operation: Delete employee by ID
+    public void deleteEmployee(int employeeId) {
+        String sql = "DELETE FROM Employee WHERE EmployeeID=?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, employeeId);
+
+            int rowsDeleted = pstmt.executeUpdate();
+            if (rowsDeleted > 0) {
+                System.out.println("Employee deleted successfully!");
+            } else {
+                System.out.println("No employee found with ID: " + employeeId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        // Example usage
+        ReadUpdateDeleteEmployee employeeDAO = new ReadUpdateDeleteEmployee();
+
+        // Read operation example
+        Employee employee = employeeDAO.getEmployeeById(1);
+        System.out.println("Retrieved Employee: " + employee);
+
+        // Update operation example
+        if (employee != null) {
+            employee.setSalary(new BigDecimal("55000.00"));
+            employeeDAO.updateEmployee(employee);
+        }
+
+        // Delete operation example
+        employeeDAO.deleteEmployee(2);
+    }
+}
