@@ -1,0 +1,51 @@
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.*;
+import java.sql.*;
+
+public class CreateEmployeeServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Retrieve form data
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String email = request.getParameter("email");
+        String phoneNumber = request.getParameter("phoneNumber");
+        Date hireDate = Date.valueOf(request.getParameter("hireDate"));
+        BigDecimal salary = new BigDecimal(request.getParameter("salary"));
+
+        // JDBC URL, username, and password
+        String jdbcUrl = "jdbc:mysql://localhost:3306/your_database_name";
+        String username = "your_username";
+        String password = "your_password";
+
+        // SQL query to insert an employee
+        String sql = "INSERT INTO Employee (FirstName, LastName, Email, PhoneNumber, HireDate, Salary) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (
+            // Establishing database connection
+            Connection conn = DriverManager.getConnection(jdbcUrl, username, password);
+            // Creating prepared statement
+            PreparedStatement pstmt = conn.prepareStatement(sql)
+        ) {
+            // Setting parameters
+            pstmt.setString(1, firstName);
+            pstmt.setString(2, lastName);
+            pstmt.setString(3, email);
+            pstmt.setString(4, phoneNumber);
+            pstmt.setDate(5, hireDate);
+            pstmt.setBigDecimal(6, salary);
+
+            // Executing the statement
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                response.getWriter().println("Employee created successfully!");
+            } else {
+                response.getWriter().println("Failed to create employee.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.getWriter().println("Error: " + e.getMessage());
+        }
+    }
+}
