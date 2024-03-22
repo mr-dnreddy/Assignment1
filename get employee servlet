@@ -1,0 +1,53 @@
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.*;
+import java.sql.*;
+import com.google.gson.Gson; // Assuming you have Gson library for JSON serialization
+
+public class GetEmployeesServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // JDBC URL, username, and password
+        String jdbcUrl = "jdbc:mysql://localhost:3306/your_database_name";
+        String username = "your_username";
+        String password = "your_password";
+
+        // SQL query to select all employees
+        String sql = "SELECT * FROM Employee";
+
+        try (
+            // Establishing database connection
+            Connection conn = DriverManager.getConnection(jdbcUrl, username, password);
+            // Creating statement
+            Statement stmt = conn.createStatement();
+            // Executing the query
+            ResultSet rs = stmt.executeQuery(sql)
+        ) {
+            // Creating a list to hold employees
+            List<Employee> employees = new ArrayList<>();
+
+            // Iterating through the result set and adding employees to the list
+            while (rs.next()) {
+                Employee employee = new Employee();
+                employee.setEmployeeID(rs.getInt("EmployeeID"));
+                employee.setFirstName(rs.getString("FirstName"));
+                employee.setLastName(rs.getString("LastName"));
+                employee.setEmail(rs.getString("Email"));
+                employee.setPhoneNumber(rs.getString("PhoneNumber"));
+                employee.setHireDate(rs.getDate("HireDate"));
+                employee.setSalary(rs.getBigDecimal("Salary"));
+                employees.add(employee);
+            }
+
+            // Serializing the list to JSON using Gson library
+            Gson gson = new Gson();
+            String json = gson.toJson(employees);
+
+            // Setting response content type to JSON
+            response.setContentType("application/json");
+            response.getWriter().println(json);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.getWriter().println("Error: " + e.getMessage());
+        }
+    }
+}
